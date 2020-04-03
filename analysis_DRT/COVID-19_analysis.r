@@ -4,6 +4,8 @@
 # Data from https://github.com/CSSEGISandData/COVID-19 (forked)
 
 filepath <- "../csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-XXX.csv"
+# filepath <- "../csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv"
+# filepath <- "../csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 confirmed_path <- sub("XXX","Confirmed",filepath)
 deaths_path <- sub("XXX","Deaths",filepath)
 recovered_path <- sub("XXX","Deaths",filepath)
@@ -42,6 +44,9 @@ refstates <- c("Washington","Louisiana","Tennessee","New York")
 statecol <- rainbow(n=length(unique(r$state)))
 names(statecol) <- sort(unique(r$state))
 
+dev.new(width=8, height=4)
+par(mfrow=c(1,2))
+
 plot(log2(cases) ~ days, data=r, type="n")
 invisible(lapply(unique(r$state), function(state) 
     lines(log2(cases) ~ days, 
@@ -49,6 +54,7 @@ invisible(lapply(unique(r$state), function(state)
           col=statecol[state],
           lwd=ifelse(state %in% refstates,4,.5)
           )))
+legend("topleft", refstates, col=statecol[refstates], lwd=4)
 
 m <- lm(log2(cases) ~ date * state, data=r)
 
@@ -68,6 +74,22 @@ DT[refstates]
 # tr <- read.table("TN_Cases_-_Bar_data.csv", as.is=TRUE, 
 #                  fileEncoding="UTF-16", header=TRUE)
 # tr$days <- ceiling(difftime(as.Date(tr$Date, format="%m/%d/%Y"), "2020-03-10", units="days"))
-# 
-# plot(log2(Cases) ~ days, data=tr, type='l')
-# lines(log2(cases) ~ days, data=r[r$state=="Tennessee",], col="blue")
+# # write.csv(tr[order(tr$days, decreasing=TRUE),], file="TN_cases_DRT.csv", row.names=FALSE)
+
+tr <- read.csv("TN_cases_DRT.csv")
+tr$Date <- strptime(tr$Date, "%m/%d/%Y")
+nc <- read.table("TN_new_cases_DRT.txt",skip=1, header=TRUE)
+tr <- merge(tr, nc, all=TRUE)
+tr$days <- ceiling(difftime(tr$Date, "2020-03-05", units="days"))
+m <- lm(log2(Cases) ~ days, data=tr[tr$days <= 14,])
+
+
+plot(log2(Cases) ~ days, data=tr, type='l', xlim=c(0,30), ylim=c(0,15))
+lines(0:30, coef(m)['days']*0:30, lwd=3, col="green")
+
+
+# Davidson county only cases
+dc <- read.table("Davidson_cases_DRT.txt", header=TRUE, as.is=TRUE)
+dc$Date <- as.Date(dc$Date)
+plot(log2(Cases) ~ Date, dc, type='l')
+
