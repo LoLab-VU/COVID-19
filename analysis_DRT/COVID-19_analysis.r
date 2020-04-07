@@ -84,8 +84,8 @@ tr$days <- ceiling(difftime(tr$Date, "2020-03-05", units="days"))
 m <- lm(log2(Cases) ~ days, data=tr[tr$days <= 14,])
 
 
-plot(log2(Cases) ~ days, data=tr, type='l', xlim=c(0,30), ylim=c(0,15))
-lines(0:30, coef(m)['days']*0:30, lwd=3, col="green")
+plot(log2(Cases) ~ days, data=tr, type='l', xlim=c(0,45), ylim=c(0,20))
+lines(0:45, coef(m)['days']*0:45, lwd=3, col="green")
 
 
 # Davidson county only cases
