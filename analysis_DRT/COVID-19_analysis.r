@@ -85,11 +85,17 @@ m <- lm(log2(Cases) ~ days, data=tr[tr$days <= 14,])
 
 
 plot(log2(Cases) ~ days, data=tr, type='l', xlim=c(0,45), ylim=c(0,20))
-lines(0:45, coef(m)['days']*0:45, lwd=3, col="green")
+abline(m, col='green', lwd=3)
 
 
 # Davidson county only cases
 dc <- read.table("Davidson_cases_DRT.txt", header=TRUE, as.is=TRUE)
 dc$Date <- as.Date(dc$Date)
 plot(log2(Cases) ~ Date, dc, type='l')
+
+
+m2 <- lm(log2(Cases) ~ Date, data=dc[dc$Date > as.Date("2020-04-01"),])
+plot(log2(Cases) ~ Date, dc[dc$Date > as.Date("2020-04-01"),], type='l')
+abline(m2, col='green', lwd=3)
+
 
