@@ -84,18 +84,37 @@ tr$days <- ceiling(difftime(tr$Date, "2020-03-05", units="days"))
 m <- lm(log2(Cases) ~ days, data=tr[tr$days <= 14,])
 
 
-plot(log2(Cases) ~ days, data=tr, type='l', xlim=c(0,45), ylim=c(0,20))
+plot(log2(Cases) ~ days, data=tr, type='l', ylim=c(0,22), main="TN cases")
 abline(m, col='green', lwd=3)
 
+
+dev.new(width=8, height=4)
+par(mfrow=c(1,2))
 
 # Davidson county only cases
 dc <- read.table("Davidson_cases_DRT.txt", header=TRUE, as.is=TRUE)
 dc$Date <- as.Date(dc$Date)
-plot(log2(Cases) ~ Date, dc, type='l')
+dc$days <- as.integer(difftime(dc$Date,tail(dc$Date,1), units="days"))
+plot(log2(Cases) ~ Date, dc, type='l', main="Davidson cases")
 
 
-m2 <- lm(log2(Cases) ~ Date, data=dc[dc$Date > as.Date("2020-04-01"),])
-plot(log2(Cases) ~ Date, dc[dc$Date > as.Date("2020-04-01"),], type='l')
+
+plot(log2(Cases) ~ Date, dc[dc$Date > as.Date("2020-04-01"),], type='l', 
+          main="Davidson cases", ylim=c(9.5,12))
+m2 <- lm(log2(Cases) ~ Date, data=dc[dc$Date > as.Date("2020-04-01") & dc$Date < as.Date("2020-04-10"),])
+m3 <- lm(log2(Cases) ~ Date, data=dc[dc$Date > as.Date("2020-04-08"),])
 abline(m2, col='green', lwd=3)
+abline(m3, col='orange', lwd=3)
+legend("topleft", legend=c("Doubling time",
+                           round(1/coef(m2)['Date'],1), 
+                           round(1/coef(m3)['Date'],1)), 
+       col=c("white","green","orange"), lwd=2)
 
+# Fit a logistic model to the data to predict the maximum number of cases
+logisticModelSS <- nls(Cases ~ SSlogis(days, Asym, xmid, scal), dc)
 
+print(paste("Expected maximum number of cases =", ceiling(coef(logisticModelSS)['Asym'])))
+
+plot(dc$Date[which(!is.na(dc$Cases))], log2(predict(logisticModelSS)), type="l",
+     col="blue", lwd=3, main="Davidson cases")
+lines(log2(Cases) ~ Date, data=dc)
