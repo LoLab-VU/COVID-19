@@ -44,10 +44,10 @@ refstates <- c("Washington","Louisiana","Tennessee","New York")
 statecol <- rainbow(n=length(unique(r$state)))
 names(statecol) <- sort(unique(r$state))
 
-dev.new(width=8, height=4)
-par(mfrow=c(1,2))
+dev.new(width=9, height=4)
+par(mfrow=c(1,3))
 
-plot(log2(cases) ~ days, data=r, type="n")
+plot(log2(cases) ~ days, data=r, type="n", main="Cases by State")
 invisible(lapply(unique(r$state), function(state) 
     lines(log2(cases) ~ days, 
           data=r[r$state==state,],
@@ -87,9 +87,15 @@ m <- lm(log2(Cases) ~ days, data=tr[tr$days <= 14,])
 plot(log2(Cases) ~ days, data=tr, type='l', ylim=c(0,22), main="TN cases")
 abline(m, col='green', lwd=3)
 
+plot(log2(Cases) ~ days, data=tr[tr$days>30,], type='l', 
+     xlab="Days after first case",
+     ylim=c(0,22), main="TN cases")
+tm_post30 <- lm(log2(Cases) ~ days, data=tr[tr$days >= 30,])
+abline(tm_post30, col='orange', lwd=3)
+text(30,5,labels=paste("DT =",round(1/coef(tm_post30)['days'],2),"days"), pos=4)
 
-dev.new(width=8, height=4)
-par(mfrow=c(1,2))
+dev.new(width=9, height=4)
+par(mfrow=c(1,3))
 
 # Davidson county only cases
 dc <- read.table("Davidson_cases_DRT.txt", header=TRUE, as.is=TRUE)
@@ -110,11 +116,13 @@ legend("topleft", legend=c("Doubling time",
                            round(1/coef(m3)['Date'],1)), 
        col=c("white","green","orange"), lwd=2)
 
+dctf <- dc[dc$days>10 & !is.na(dc$Cases),]
+
 # Fit a logistic model to the data to predict the maximum number of cases
-logisticModelSS <- nls(Cases ~ SSlogis(days, Asym, xmid, scal), dc)
+logisticModelSS <- nls(Cases ~ SSlogis(days, Asym, xmid, scal), dctf)
 
 print(paste("Expected maximum number of cases =", ceiling(coef(logisticModelSS)['Asym'])))
 
-plot(dc$Date[which(!is.na(dc$Cases))], log2(predict(logisticModelSS)), type="l",
+plot(dctf$Date, log2(predict(logisticModelSS)), type="l",
      col="blue", lwd=3, main="Davidson cases")
-lines(log2(Cases) ~ Date, data=dc)
+lines(log2(Cases) ~ Date, data=dctf)
