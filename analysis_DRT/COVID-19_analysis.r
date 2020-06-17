@@ -44,6 +44,9 @@ refstates <- c("Washington","Louisiana","Tennessee","New York")
 statecol <- rainbow(n=length(unique(r$state)))
 names(statecol) <- sort(unique(r$state))
 
+###########################
+# Plot multiple statewide cases
+###########################
 dev.new(width=9, height=4)
 par(mfrow=c(1,3))
 
@@ -76,6 +79,10 @@ DT[refstates]
 # tr$days <- ceiling(difftime(as.Date(tr$Date, format="%m/%d/%Y"), "2020-03-10", units="days"))
 # # write.csv(tr[order(tr$days, decreasing=TRUE),], file="TN_cases_DRT.csv", row.names=FALSE)
 
+###########################
+# TN cases
+###########################
+
 tr <- read.csv("TN_cases_DRT.csv")
 tr$Date <- strptime(tr$Date, "%m/%d/%Y")
 nc <- read.table("TN_new_cases_DRT.txt",skip=1, header=TRUE)
@@ -83,10 +90,11 @@ tr <- merge(tr, nc, all=TRUE)
 tr$days <- ceiling(difftime(tr$Date, "2020-03-05", units="days"))
 m <- lm(log2(Cases) ~ days, data=tr[tr$days <= 14,])
 
-
+# Plot all TN cases with trendline from first 14 days
 plot(log2(Cases) ~ days, data=tr, type='l', ylim=c(0,22), main="TN cases")
 abline(m, col='green', lwd=3)
 
+# plot TN cases after first month with post-30d trendline
 plot(log2(Cases) ~ days, data=tr[tr$days>30,], type='l', 
      xlab="Days after first case",
      ylim=c(0,22), main="TN cases")
@@ -94,10 +102,12 @@ tm_post30 <- lm(log2(Cases) ~ days, data=tr[tr$days >= 30,])
 abline(tm_post30, col='orange', lwd=3)
 text(30,5,labels=paste("DT =",round(1/coef(tm_post30)['days'],2),"days"), pos=4)
 
+###########################
+# Davidson county cases
+###########################
 dev.new(width=9, height=4)
 par(mfrow=c(1,3))
 
-# Davidson county only cases
 dc <- read.table("Davidson_cases_DRT.txt", header=TRUE, as.is=TRUE)
 dc$Date <- as.Date(dc$Date)
 dc$days <- as.integer(difftime(dc$Date,tail(dc$Date,1), units="days"))
@@ -106,15 +116,22 @@ plot(log2(Cases) ~ Date, dc, type='l', main="Davidson cases")
 
 
 plot(log2(Cases) ~ Date, dc[dc$Date > as.Date("2020-04-01"),], type='l', 
-          main="Davidson cases", ylim=c(9.5,12))
+          main="Davidson cases", ylim=c(9.5,14))
 m2 <- lm(log2(Cases) ~ Date, data=dc[dc$Date > as.Date("2020-04-01") & dc$Date < as.Date("2020-04-10"),])
-m3 <- lm(log2(Cases) ~ Date, data=dc[dc$Date > as.Date("2020-04-08"),])
-abline(m2, col='green', lwd=3)
-abline(m3, col='orange', lwd=3)
+m3 <- lm(log2(Cases) ~ Date, data=dc[dc$Date > as.Date("2020-04-08")& dc$Date < as.Date("2020-05-05"),])
+m4 <- lm(log2(Cases) ~ Date, data=dc[dc$Date > as.Date("2020-05-05"),])
+abline(m2, col='green', lwd=2)
+abline(m3, col='orange', lwd=2)
+abline(m4, col='red', lwd=2)
 legend("topleft", legend=c("Doubling time",
                            round(1/coef(m2)['Date'],1), 
-                           round(1/coef(m3)['Date'],1)), 
-       col=c("white","green","orange"), lwd=2)
+                           round(1/coef(m3)['Date'],1), 
+                           round(1/coef(m4)['Date'],1)),
+       col=c("white","green","orange","red"), lwd=2)
+abline(v=as.Date("2020-04-08"),lty=2, col=grey(.5))
+abline(v=as.Date("2020-05-05"),lty=2, col=grey(.5))
+text(as.Date("2020-04-08"),9.5,"Apr-08", pos=4)
+text(as.Date("2020-05-05"),9.5,"May-05", pos=4)
 
 dctf <- dc[dc$days>10 & !is.na(dc$Cases),]
 
