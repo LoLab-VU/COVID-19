@@ -98,9 +98,12 @@ abline(m, col='green', lwd=3)
 plot(log2(Cases) ~ days, data=tr[tr$days>30,], type='l', 
      xlab="Days after first case",
      ylim=c(0,22), main="TN cases")
-tm_post30 <- lm(log2(Cases) ~ days, data=tr[tr$days >= 30,])
-abline(tm_post30, col='orange', lwd=3)
-text(30,5,labels=paste("DT =",round(1/coef(tm_post30)['days'],2),"days"), pos=4)
+tm_30to60 <- lm(log2(Cases) ~ days, data=tr[tr$days >= 30 & tr$days < 60,])
+tm_post60 <- lm(log2(Cases) ~ days, data=tr[tr$days >= 60,])
+abline(tm_30to60, col='orange', lwd=2)
+abline(tm_post60, col='red', lwd=2)
+text(30,5,labels=paste("DT, days30-60 =",round(1/coef(tm_30to60)['days'],2),"days"), pos=4)
+text(30,4.25,labels=paste("DT, days>60 =",round(1/coef(tm_post60)['days'],2),"days"), pos=4)
 
 ###########################
 # Davidson county cases
