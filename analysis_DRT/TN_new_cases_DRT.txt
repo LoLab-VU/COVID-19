@@ -1,5 +1,7 @@
 # confirmed SARS-CoV-2 infections in TN, Tennesseean reported
 Date	Cases
+2020-06-19	34017
+2020-06-18	32829
 2020-06-17	32143
 2020-06-16	31830
 2020-06-15	31160
